@@ -370,7 +370,21 @@ class KieLabelEncode(object):
                 if self.directed:
                     for i,label1 in enumerate(labels[:,0]):
                         for j, label2 in enumerate(labels[:,0]):
+                            # if class_dict[str(label1)].replace("_key","")==class_dict[str(label2)].replace("_value",""):
+                            #     edges[i][j] = 1
+                            # if i == j:
+                            #     edges[i][j] = -1
+                            # if "other" in class_dict[str(label1)] or "other" in class_dict[str(label2)]:
+                            #     edges[i][j] = -1
+                            # if "ignore" in class_dict[str(label1)] or "ignore" in class_dict[str(label2)]:
+                            #     edges[i][j] = -1
+                            
+                            # enhance edge cls
+                            if label1==label2 and i!=j:
+                                edges[i][j] = 1
                             if class_dict[str(label1)].replace("_key","")==class_dict[str(label2)].replace("_value",""):
+                                edges[i][j] = 2
+                            elif class_dict[str(label1)].replace("_value","")==class_dict[str(label2)].replace("_key",""):
                                 edges[i][j] = 1
                             if i == j:
                                 edges[i][j] = -1

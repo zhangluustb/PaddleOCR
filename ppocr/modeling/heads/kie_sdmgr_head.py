@@ -48,7 +48,7 @@ class SDMGRHead(nn.Layer):
         self.gnn_layers = nn.LayerList(
             [GNNLayer(node_embed, edge_embed) for _ in range(num_gnn)])
         self.node_cls = nn.Linear(node_embed, num_classes)
-        self.edge_cls = nn.Linear(edge_embed, 2)
+        self.edge_cls = nn.Linear(edge_embed, 3)
 
     def forward(self, input, targets):
         relations, texts, x = input
