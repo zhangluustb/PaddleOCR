@@ -13,6 +13,7 @@
 # limitations under the License.
 
 train_without_other = True
+directed_edge = False
 
 from __future__ import absolute_import
 from __future__ import division
@@ -327,6 +328,21 @@ class KieLabelEncode(object):
             padded_text_inds[idx, :len(text_ind)] = np.array(text_ind)
         return padded_text_inds, recoder_len
 
+    def get_class_dict(self,class_list_path):
+        """
+        类别信息处理成字典形式
+        :param class_list_path:
+        :return:
+        """
+        class_dict={}
+        with open(class_list_path,"r") as f:
+            class_label=f.readlines()
+            for label in class_label:
+                class_index=label.split(" ")[0]
+                class_name=label.split(" ")[-1].replace("\n","")
+                class_dict[class_index]=class_name
+        return class_dict
+    
     def list_to_numpy(self, ann_infos):
         """Convert bboxes, relations, texts and labels to ndarray."""
         boxes, text_inds = ann_infos['points'], ann_infos['text_inds']
@@ -335,15 +351,36 @@ class KieLabelEncode(object):
 
         labels = ann_infos.get('labels', None)
         if labels is not None:
+            #     edges = (edges[:, None] == edges[None, :]).astype(np.int32)
+            #     if self.directed:
+            #         edges = (edges & labels == 1).astype(np.int32)
+            #     np.fill_diagonal(edges, -1)
+            #     labels = np.concatenate([labels, edges], -1)
             labels = np.array(labels, np.int32)
             edges = ann_infos.get('edges', None)
             if edges is not None:
                 labels = labels[:, None]
                 edges = np.array(edges)
-                edges = (edges[:, None] == edges[None, :]).astype(np.int32)
-                if self.directed:
-                    edges = (edges & labels == 1).astype(np.int32)
+                # edges = (edges[:, None] == edges[None, :]).astype(np.int32)
+                edges=(np.zeros((len(labels[:,0]),len(labels[:,0])))).astype(np.int32)
+                # if self.directed:
+                    # edges = (edges & labels == 1).astype(np.int32)
                 np.fill_diagonal(edges, -1)
+                class_dict=self.get_class_dict(self.class_list)
+                for i,label1 in enumerate(labels[:,0]):
+                    for j, label2 in enumerate(labels[:,0]):
+                        if label1==label2 and i!=j:
+                            edges[i][j] = 1
+                        if class_dict[str(label1)].replace("_key","")==class_dict[str(label2)].replace("_value",""):
+                            edges[i][j] = 1
+                        elif class_dict[str(label1)].replace("_value","")==class_dict[str(label2)].replace("_key",""):
+                            edges[i][j] = 1
+                        if i == j:
+                            edges[i][j] = -1
+                        if "other" in class_dict[str(label1)] or "other" in class_dict[str(label2)]:
+                            edges[i][j] = -1
+                        if "ignore" in class_dict[str(label1)] or "ignore" in class_dict[str(label2)]:
+                            edges[i][j] = -1
                 labels = np.concatenate([labels, edges], -1)
         padded_text_inds, recoder_len = self.pad_text_indices(text_inds)
         max_num = 300
