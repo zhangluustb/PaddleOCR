@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-train_without_other = True
-directed_edge = False
+
 
 from __future__ import absolute_import
 from __future__ import division
@@ -29,6 +28,7 @@ import copy
 from scipy.spatial import distance as dist
 from ppocr.utils.logging import get_logger
 
+train_without_other = True
 
 class ClsLabelEncode(object):
     def __init__(self, label_list, **kwargs):
@@ -294,8 +294,9 @@ class E2ELabelEncodeTrain(object):
 
 
 class KieLabelEncode(object):
-    def __init__(self, character_dict_path, norm=10, directed=False, **kwargs):
+    def __init__(self, character_dict_path, class_path,norm=10, directed=False, **kwargs):
         super(KieLabelEncode, self).__init__()
+        self.class_list = class_path
         self.dict = dict({'': 0})
         with open(character_dict_path, 'r', encoding='utf-8') as fr:
             idx = 1
@@ -361,26 +362,37 @@ class KieLabelEncode(object):
             if edges is not None:
                 labels = labels[:, None]
                 edges = np.array(edges)
-                # edges = (edges[:, None] == edges[None, :]).astype(np.int32)
                 edges=(np.zeros((len(labels[:,0]),len(labels[:,0])))).astype(np.int32)
                 # if self.directed:
                     # edges = (edges & labels == 1).astype(np.int32)
                 np.fill_diagonal(edges, -1)
                 class_dict=self.get_class_dict(self.class_list)
-                for i,label1 in enumerate(labels[:,0]):
-                    for j, label2 in enumerate(labels[:,0]):
-                        if label1==label2 and i!=j:
-                            edges[i][j] = 1
-                        if class_dict[str(label1)].replace("_key","")==class_dict[str(label2)].replace("_value",""):
-                            edges[i][j] = 1
-                        elif class_dict[str(label1)].replace("_value","")==class_dict[str(label2)].replace("_key",""):
-                            edges[i][j] = 1
-                        if i == j:
-                            edges[i][j] = -1
-                        if "other" in class_dict[str(label1)] or "other" in class_dict[str(label2)]:
-                            edges[i][j] = -1
-                        if "ignore" in class_dict[str(label1)] or "ignore" in class_dict[str(label2)]:
-                            edges[i][j] = -1
+                if self.directed:
+                    for i,label1 in enumerate(labels[:,0]):
+                        for j, label2 in enumerate(labels[:,0]):
+                            if class_dict[str(label1)].replace("_key","")==class_dict[str(label2)].replace("_value",""):
+                                edges[i][j] = 1
+                            if i == j:
+                                edges[i][j] = -1
+                            if "other" in class_dict[str(label1)] or "other" in class_dict[str(label2)]:
+                                edges[i][j] = -1
+                            if "ignore" in class_dict[str(label1)] or "ignore" in class_dict[str(label2)]:
+                                edges[i][j] = -1
+                else:
+                    for i,label1 in enumerate(labels[:,0]):
+                        for j, label2 in enumerate(labels[:,0]):
+                            if label1==label2 and i!=j:
+                                edges[i][j] = 1
+                            if class_dict[str(label1)].replace("_key","")==class_dict[str(label2)].replace("_value",""):
+                                edges[i][j] = 1
+                            elif class_dict[str(label1)].replace("_value","")==class_dict[str(label2)].replace("_key",""):
+                                edges[i][j] = 1
+                            if i == j:
+                                edges[i][j] = -1
+                            if "other" in class_dict[str(label1)] or "other" in class_dict[str(label2)]:
+                                edges[i][j] = -1
+                            if "ignore" in class_dict[str(label1)] or "ignore" in class_dict[str(label2)]:
+                                edges[i][j] = -1
                 labels = np.concatenate([labels, edges], -1)
         padded_text_inds, recoder_len = self.pad_text_indices(text_inds)
         max_num = 300

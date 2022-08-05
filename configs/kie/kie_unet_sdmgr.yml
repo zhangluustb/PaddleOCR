@@ -6,7 +6,7 @@ Global:
   save_model_dir: ./output/kie_5/
   save_epoch_step: 3170
   # evaluation is run every 5000 iterations after the 4000th iteration
-  eval_batch_step: [ 0, 317 ]
+  eval_batch_step: [ 0, 50 ]
   # 1. If pretrained_model is saved in static mode, such as classification pretrained model
   #    from static branch, load_static_weights must be set as True.
   # 2. If you want to finetune the pretrained models we provide in the docs,
@@ -53,7 +53,7 @@ PostProcess:
 
 Metric:
   name: KIEMetric
-  main_indicator: hmean
+  main_indicator: hmean #acc_edge
 
 Train:
   dataset:
@@ -72,6 +72,7 @@ Train:
           order: 'hwc'
       - KieLabelEncode: # Class handling label
           character_dict_path: ./train_data/wildreceipt/dict.txt
+          directed: False
       - KieResize:
       - ToCHWImage:
       - KeepKeys:
@@ -95,6 +96,7 @@ Eval:
           channel_first: False
       - KieLabelEncode: # Class handling label
           character_dict_path: ./train_data/wildreceipt/dict.txt
+          directed: False
       - KieResize:
       - NormalizeImage:
           scale: 1
