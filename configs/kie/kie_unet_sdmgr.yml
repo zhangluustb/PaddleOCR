@@ -72,7 +72,7 @@ Train:
           order: 'hwc'
       - KieLabelEncode: # Class handling label
           character_dict_path: ./train_data/wildreceipt/dict.txt
-          directed: False
+          directed: True
       - KieResize:
       - ToCHWImage:
       - KeepKeys:
@@ -96,7 +96,7 @@ Eval:
           channel_first: False
       - KieLabelEncode: # Class handling label
           character_dict_path: ./train_data/wildreceipt/dict.txt
-          directed: False
+          directed: True
       - KieResize:
       - NormalizeImage:
           scale: 1
