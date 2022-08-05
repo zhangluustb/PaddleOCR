@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+train_without_other = True
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -426,6 +428,9 @@ class KieLabelEncode(object):
         annotations = json.loads(label)
         boxes, texts, text_inds, labels, edges = [], [], [], [], []
         for ann in annotations:
+            ## remove other node
+            if ann['label']==0 and train_without_other:
+                continue
             box = ann['points']
             x_list = [box[i][0] for i in range(4)]
             y_list = [box[i][1] for i in range(4)]
