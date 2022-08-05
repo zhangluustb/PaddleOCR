@@ -97,7 +97,8 @@ class SDMGRLoss(nn.Layer):
             edge_gts.append(gt[:, 1:].reshape([-1]))
         node_gts = paddle.concat(node_gts)
         edge_gts = paddle.concat(edge_gts)
-
+        if (node_gts != self.ignore).sum().item()==0:
+            return None
         node_valids = paddle.nonzero(node_gts != self.ignore).reshape([-1])
         edge_valids = paddle.nonzero(edge_gts != -1).reshape([-1])
         loss_node = self.loss_node(node_preds, node_gts)

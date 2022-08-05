@@ -40,7 +40,10 @@ class KIEMetric(object):
         # self.results.append(result)
 
     def compute_f1_score(self, preds, gts):
-        ignores = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 25]
+        acc = ((preds.argmax(1)==gts)[np.nonzero(gts)[0]]).sum()/(np.nonzero(gts)[0]).shape[0] # without other acc
+        acc_other = ((preds.argmax(1)==gts)[np.where(gts==0)[0]]).sum()/(np.where(gts==0)[0]).shape[0]
+        # ignores = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 25] #ignore key
+        ignores = [0] #ignore other
         C = preds.shape[1]
         classes = np.array(sorted(set(range(C)) - set(ignores)))
         hist = np.bincount(
@@ -50,13 +53,13 @@ class KIEMetric(object):
         recalls = diag / hist.sum(1).clip(min=1)
         precisions = diag / hist.sum(0).clip(min=1)
         f1 = 2 * recalls * precisions / (recalls + precisions).clip(min=1e-8)
-        return f1[classes]
+        return f1[classes],acc,acc_other
 
     def combine_results(self, results):
         node = np.concatenate(self.node, 0)
         gts = np.concatenate(self.gt, 0)
-        results = self.compute_f1_score(node, gts)
-        data = {'hmean': results.mean()}
+        results,acc,acc_other = self.compute_f1_score(node, gts)
+        data = {'hmean': results.mean(),"acc":acc,"acc_other":acc_other}
         return data
 
     def get_metric(self):

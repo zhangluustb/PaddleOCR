@@ -40,7 +40,7 @@ class ArgsParser(ArgumentParser):
     def __init__(self):
         super(ArgsParser, self).__init__(
             formatter_class=RawDescriptionHelpFormatter)
-        self.add_argument("-c", "--config", help="configuration file to use")
+        self.add_argument("-c", "--config", default="configs/kie/kie_unet_sdmgr.yml")
         self.add_argument(
             "-o", "--opt", nargs='+', help="set configuration options")
         self.add_argument(
@@ -266,6 +266,8 @@ def train(config,
                     preds = model(images)
 
             loss = loss_class(preds, batch)
+            if loss is None:
+                continue
             avg_loss = loss['loss']
 
             if scaler:
